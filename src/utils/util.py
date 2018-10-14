@@ -1,3 +1,9 @@
+import pathlib
+
+import os
+import tarfile
+
+
 class Util:
 
     def __init__(self):
@@ -51,4 +57,15 @@ class Util:
             out.close()
         except IOError:
             pass
+
+    @staticmethod
+    def make_dir(username, contest, code):
+        pathlib.Path("CC/" + username + "/" + contest.upper() + "/" + code.upper()).mkdir(parents=True, exist_ok=True)
+
+    @staticmethod
+    def make_tar_ball(username):
+        path = os.path.abspath(os.path.join("", "CC/" + username))
+        print(path)
+        with tarfile.open(path + "/" + username + ".tar.gz", "w:gz") as tar:
+            tar.add(path, os.path.basename(path))
 
