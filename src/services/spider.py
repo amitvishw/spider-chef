@@ -8,6 +8,7 @@ BASE_URL = "https://www.codechef.com"
 PROFILE_URL = BASE_URL + "/users/"
 PRACTICE_SUB_URL = BASE_URL + "/status/{0},{2}"
 CONTEST_SUB_URL = BASE_URL + "/{0}/status/{1},{2}"
+SOLUTION_URL = BASE_URL + "/viewsolution/"
 
 
 class Spider:
@@ -62,3 +63,21 @@ class Spider:
             solution = Solution(contest, problem, s_id, status, ext, partial, "")
             solutions.append(solution)
         return solutions
+
+    @staticmethod
+    def download_code(solution, username):
+        try:
+            soup = Soap.get_soap(SOLUTION_URL + solution.sId)
+            if soup is None:
+                return None
+            code_text = []
+            lis = soup.findAll("ol")[0].findAll("li")
+            for li in lis:
+                code_text.append(li.text)
+            solution.text = code_text
+            Util.write_in_file(solution, username)
+        except IndexError:
+            print("ERROR FOR:", solution.contest, solution.problem, solution.sId)
+        except AttributeError:
+            print("ERROR FOR:", solution.contest, solution.problem, solution.sId)
+
