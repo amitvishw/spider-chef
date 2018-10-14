@@ -1,4 +1,7 @@
 from collections import OrderedDict
+from itertools import repeat
+from multiprocessing.dummy import Pool
+from multiprocessing import cpu_count
 
 from src.bs.soap import Soap
 from src.models.solution import Solution
@@ -81,3 +84,33 @@ class Spider:
         except AttributeError:
             print("ERROR FOR:", solution.contest, solution.problem, solution.sId)
 
+    @staticmethod
+    def init(username):
+        codes = Spider.get_problems_codes(username)
+        if codes is not None:
+            for key in codes.keys():
+                if key == "practice":
+                    to_download = []
+                    p_codes = codes[key]
+                    for code in p_codes:
+                        Util.make_dir(username, key, code)
+                        solutions = Spider.get_solutions_ids(username, code, key)
+                        for i in solutions:
+                            to_download.append(i)
+                    pool = Pool(cpu_count() * 1)
+                    pool.starmap(Spider.download_code, zip(to_download, repeat(username)))
+                else:
+                    to_download = []
+                    p_codes = codes[key]
+                    Util.make_dir(username, "CONTEST", key)
+                    for code in p_codes:
+                        Util.make_dir(username, "CONTEST/" + key, code)
+                        solutions = Spider.get_solutions_ids(username, code, key)
+                        for i in solutions:
+                            to_download.append(i)
+                    pool = Pool(cpu_count() * 1)
+                    pool.starmap(Spider.download_code, zip(to_download, repeat(username)))
+                    pass
+            Util.make_tar_ball(username)
+        else:
+            print("No Code Found")
