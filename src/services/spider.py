@@ -1,10 +1,13 @@
 from collections import OrderedDict
 
 from src.bs.soap import Soap
+from src.models.solution import Solution
 from src.utils.util import Util
 
 BASE_URL = "https://www.codechef.com"
 PROFILE_URL = BASE_URL + "/users/"
+PRACTICE_SUB_URL = BASE_URL + "/status/{0},{2}"
+CONTEST_SUB_URL = BASE_URL + "/{0}/status/{1},{2}"
 
 
 class Spider:
@@ -28,3 +31,34 @@ class Spider:
             return problems
         else:
             print("No problem codes found")
+
+    @staticmethod
+    def get_solutions_ids(username, contest, problem):
+        if contest.upper() == "PRACTICE":
+            url = PRACTICE_SUB_URL.format(problem, username)
+        else:
+            url = CONTEST_SUB_URL.format(contest, problem, username)
+        soup = Soap.get_soap(url)
+        if soup is None:
+            return None
+        trs = soup.findAll("tbody")[0].findAll("tr")
+        solutions = []
+        for row in trs:
+            partial = None
+            x = row.findAll("td")
+            s_id = x[0].text
+            src = x[3].findAll("img")[0].get("src")
+            status = Util.get_solution_status(src)
+            if status == "AC":
+                try:
+                    pts = x[3].text.split("[")[1][:-1]
+                except IndexError:
+                    pts = "1pts"
+                if "100" in pts or "." in pts or (pts == "1pts" and status == "AC"):
+                    partial = False
+                else:
+                    partial = True
+            ext = Util.get_file_extension_for_language(x[6].text)
+            solution = Solution(contest, problem, s_id, status, ext, partial, "")
+            solutions.append(solution)
+        return solutions
