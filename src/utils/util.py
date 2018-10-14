@@ -36,3 +36,19 @@ class Util:
         if "JAR" in language:
             return "jar"
         return "txt"
+
+    @staticmethod
+    def write_in_file(solution, username):
+        name = solution.sId + "." + solution.extension
+        data = "\n".join(map(str, solution.text))
+        if solution.contest == "practice":
+            path = username + "/" + solution.contest.upper() + "/" + solution.problem.upper() + "/"
+        else:
+            path = username + "/CONTEST/" + solution.contest.upper() + "/" + solution.problem.upper() + "/"
+        try:
+            out = open("CC/" + path + name, "w")
+            out.write(data)
+            out.close()
+        except IOError:
+            pass
+
